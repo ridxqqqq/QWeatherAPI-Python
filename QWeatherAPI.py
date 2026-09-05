@@ -56,8 +56,8 @@ if __name__ == '__main__':
         print('No Key! Get it first!')
 
     #print('请输入城市:')
-    city_input = "南岔"
-    city_idname = get_city(city_input)
+    #city_input = "南岔"
+    city_idname = get_city("南岔")
 
     city_id = city_idname[0]
 
