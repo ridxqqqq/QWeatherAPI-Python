@@ -7,6 +7,7 @@
 凭据可在 https://console.qweather.com 获取。
 """
 
+import os
 import sys
 
 import requests
@@ -17,6 +18,7 @@ except ImportError:
     KEY = API_HOST = ''
 
 TIMEOUT = 10
+WECHAT_WEBHOOK = os.environ.get('QWEATHER_WECHAT_WEBHOOK', '')
 
 
 def _request(path, **params):
@@ -69,6 +71,19 @@ def air_now(city_id):
     return _request('/v7/air/now', location=city_id)['now']
 
 
+def send_wecom(content):
+    """通过企业微信群机器人 Webhook 发送文本通知。"""
+    response = requests.post(
+        WECHAT_WEBHOOK,
+        json={'msgtype': 'text', 'text': {'content': content}},
+        timeout=TIMEOUT,
+    )
+    response.raise_for_status()
+    result = response.json()
+    if result.get('errcode') != 0:
+        raise RuntimeError(f'企业微信通知发送失败: {result}')
+
+
 def main():
     if not KEY or not API_HOST:
         print('缺少凭据, 请将 myKey.example.py 复制为 myKey.py 并填写 KEY 与 API_HOST')
@@ -83,19 +98,30 @@ def main():
     air = air_now(city_id)
 
     if city == district:
-        print(province, city + '市')
+        title = f'{province} {city}市'
     else:
-        print(province, city + '市', district + '区')
-    print('当前天气：', current['text'], current['temp'], '°C', '体感温度', current['feelsLike'], '°C')
-    print('空气质量指数：', air['aqi'])
-    print('降水情况：', rain['summary'])
-    print('今日天气：', daily[0]['textDay'], daily[0]['tempMin'], '-', daily[0]['tempMax'], '°C')
+        title = f'{province} {city}市 {district}区'
 
     n_hours_later = 1
-    print(n_hours_later, '小时后天气：', hourly[n_hours_later]['text'], hourly[n_hours_later]['temp'], '°C')
-
     n_days_later = 1
-    print(n_days_later, '天后天气：', daily[n_days_later]['textDay'], daily[n_days_later]['tempMin'], '-', daily[n_days_later]['tempMax'], '°C')
+    lines = [
+        title,
+        f'当前天气： {current["text"]} {current["temp"]} °C 体感温度 {current["feelsLike"]} °C',
+        f'空气质量指数： {air["aqi"]}',
+        f'降水情况： {rain["summary"]}',
+        f'今日天气： {daily[0]["textDay"]} {daily[0]["tempMin"]} - {daily[0]["tempMax"]} °C',
+        f'{n_hours_later} 小时后天气： {hourly[n_hours_later]["text"]} {hourly[n_hours_later]["temp"]} °C',
+        f'{n_days_later} 天后天气： {daily[n_days_later]["textDay"]} {daily[n_days_later]["tempMin"]} - {daily[n_days_later]["tempMax"]} °C',
+    ]
+
+    content = '\n'.join(lines)
+    print(content)
+
+    if WECHAT_WEBHOOK:
+        send_wecom(content)
+        print('已发送企业微信通知')
+    else:
+        print('未配置企业微信 Webhook, 跳过通知')
 
     return 0
 

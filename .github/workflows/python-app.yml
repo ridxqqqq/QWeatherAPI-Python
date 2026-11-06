@@ -1,5 +1,8 @@
 name: Python CI_test
 on:
+  schedule:
+    # GitHub Actions 使用 UTC 时间，23:00 UTC = 次日 07:00 (Asia/Shanghai)
+    - cron: '0 23 * * *'
   workflow_dispatch:
 
 jobs:
@@ -22,4 +25,6 @@ jobs:
       run: |
         printf "KEY = '%s'\nAPI_HOST = '%s'\n" "$QWEATHER_KEY" "$QWEATHER_HOST" > myKey.py
     - name: Run Python script
+      env:
+        QWEATHER_WECHAT_WEBHOOK: ${{ secrets.QWEATHER_WECHAT_WEBHOOK }}
       run: python QWeatherAPI.py
