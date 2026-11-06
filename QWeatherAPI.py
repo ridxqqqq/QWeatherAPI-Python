@@ -5,16 +5,16 @@
 
 import requests
 import json
-from myKey import KEY
+from myKey import KEY, API_HOST
 
 ''' official website  https://www.qweather.com '''
 '''      dev website  https://dev.qweather.com'''
 mykey = '&key=' + KEY # EDIT HERE!
 
-url_api_weather = 'https://devapi.qweather.com/v7/weather/'
-url_api_geo = 'https://geoapi.qweather.com/v2/city/'
-url_api_rain = 'https://devapi.qweather.com/v7/minutely/5m'
-url_api_air = 'https://devapi.qweather.com/v7/air/now'
+url_api_weather = 'https://' + API_HOST + '/v7/weather/'
+url_api_geo = 'https://' + API_HOST + '/geo/v2/city/'
+url_api_rain = 'https://' + API_HOST + '/v7/minutely/5m'
+url_api_air = 'https://' + API_HOST + '/v7/air/now'
 
 def get(api_type):
     url = url_api_weather + api_type + '?location=' + city_id + mykey
@@ -54,6 +54,8 @@ def hourly():
 if __name__ == '__main__':
     if KEY == '':
         print('No Key! Get it first!')
+    if API_HOST == '':
+        print('No API Host! Get it from https://console.qweather.com/setting')
 
     #print('请输入城市:')
     #city_input = "南岔"
